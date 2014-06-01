@@ -54,23 +54,96 @@ public final class Webserver
 				    new InputStreamReader(is));
 	 
 	
-	String requestLine = br.readLine();
+		String requestLine = br.readLine();
 	
-	System.out.print(requestLine);
+		System.out.print(requestLine);
 	
-	String headerLine = null;
+		String headerLine = null;
 	
-	while((headerLine = br.readLine()).length()!=0)
-	 {
-	  System.out.println(headerLine);
-	 }
-	
-	os.close();
-	br.close();
-	socket.close();
-	
-	}
-	}
-	  
+       		while((headerLine = br.readLine()).length()!=0)
+		 {
+		  System.out.println(headerLine);
+		 }
 
+		StringTokenizer tokens = new StringTokenizer(requestLine);	
 		
+		tokens.nextToken(); //skipping over GET command
+		
+		String fileName = "." + tokens.nextToken();	
+		//open the requested file
+		FileInputStream fis = null;
+
+		boolean fileExists = true;
+		
+		try{
+		
+		 
+		  fis= new FileInputStream(fileName);
+		}catch(FileNotFoundException e)
+		{
+			fileExists = false;
+		}
+
+		String statusLine = null;
+		String contentTypeLine = null;
+		String entityBody = null;
+	
+		if (fileExists)	
+		{ 
+			statusLine = "HTTP/1.0 200  ok "+ CRLF;
+			contentTypeLine = "Content-type:" + contentType( fileName )+ CRLF;
+			
+		}else {
+			statusLine = "HTTP/1.0 404 Not Found" + CRLF;
+			contentTypeLine = "Content-type: text/html" +CRLF;
+			entityBody = "<HTML>" + "<HEAD><TITLE>Not Found</TITLE></HEAD>"	+
+					"<BODY>Not Found</BODY></HTML>";
+		}	
+
+		//send the status line & content-type line, then send a CLRF
+		os.writeBytes(statusLine);
+		os.writeBytes(contentTypeLine);
+		os.writeBytes(CRLF);//indicates end of header lines
+
+		if(fileExists)
+		{
+		  sendBytes(fis, os);
+		  fis.close();	
+		}else {
+		  os.writeBytes(entityBody);
+		}
+		
+
+		os.close();
+		br.close();
+		socket.close();
+	
+	}
+
+	private static void sendBytes(FileInputStream fis,  OutputStream os)
+	throws Exception
+	{
+			byte[] buffer = new byte[1024];
+			int bytes = 0;
+
+			//building 1k buffer
+			while((bytes = fis.read(buffer))!=-1) os.write(buffer, 0, bytes);
+	}
+	
+	private static String contentType(String fileName)
+	{
+		if(fileName.endsWith(".html") || fileName.endsWith(".htm")) {
+			return "text/html";
+		}
+		
+		
+		if(fileName.endsWith(".jpg")) {
+			return "image/jpeg";
+		}
+		if(fileName.endsWith(".gif")) {
+			return "image/gif";
+		}
+		return "application/octet-stream";
+	}	
+	
+}
