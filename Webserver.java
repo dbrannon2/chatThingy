@@ -32,12 +32,12 @@ public final class Webserver
 		
 		public HttpRequest(Socket socket) throws Exception
 		{
-			this.socket=socket;
+		 this.socket=socket;
 		}
 		
 		public void run()
 		{
-		   try{
+		  try{
 		     processRequest();
 		  }catch(Exception e){
 		     System.out.println(e);
